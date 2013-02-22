@@ -3,3 +3,4 @@
 dev.db
 local_settings.py
 static/media/
+mezzanine_blocks.egg-info

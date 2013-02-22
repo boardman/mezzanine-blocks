@@ -1,0 +1,33 @@
+{% extends "mezzanine_blocks/block.html" %}
+{% load mezzanine_tags %}
+
+
+{% block block_content %}
+    {{ block.super }}
+    <div id="carousel-{{ flatblock.slug }}" class="carousel slide" style="width: {{ flatblock.width }}px; height: {{ flatblock.height }}px; overflow: hidden;">
+        {% if flatblock.panel_indicators %}
+            <ol class="carousel-indicators">
+                {% for panel in flatblock.panels.all %}
+                    <li data-target="#carousel-{{ flatblock.slug }}" data-slide-to="{{ forloop.counter0 }}" {% if forloop.first %}class="active"{% endif %}></li>
+                {% endfor %}
+            </ol>
+        {% endif %}
+        <div class="carousel-inner">
+            {% for panel in flatblock.panels.all %}
+                <div class="{% if forloop.first %}active{% endif %} item">
+                    {% if panel.url %}<a href="{{ panel.url }}">{% endif %}
+                    <img src="{{ panel.get_image_url }}"/>
+                    {% if panel.caption %}
+                        <div class="carousel-caption">
+                            <h4>{{ panel.caption }}</h4>
+                        </div>
+                    {% endif %}
+                    {% if panel.url %}</a>{% endif %}
+                </div>
+            {% endfor %}
+        </div>
+        <a class="carousel-control left" href="#carousel-{{ flatblock.slug }}" data-slide="prev">&lsaquo;</a>
+        <a class="carousel-control right" href="#carousel-{{ flatblock.slug }}" data-slide="next">&rsaquo;</a>
+    </div>
+    <script type="text/javascript">$('#carousel-{{ flatblock.slug }}').carousel({interval: {{ flatblock.get_interval }} });</script>
+{% endblock %}

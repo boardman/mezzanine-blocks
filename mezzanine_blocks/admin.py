@@ -1,7 +1,8 @@
 from django.utils.translation import ugettext_lazy as _
 from django.contrib import admin
 from mezzanine.conf import settings
-from models import BlockCategory, Block, RichBlock, ImageBlock
+from mezzanine.core.admin import TabularDynamicInlineAdmin
+from models import BlockCategory, Block, RichBlock, ImageBlock, CarouselBlock, CarouselPanel
 
 
 class BlockCategoryAdmin(admin.ModelAdmin):
@@ -85,7 +86,7 @@ class ImageBlockAdmin(admin.ModelAdmin):
             "fields": ["title", "description", "category", "image", 'url'],
         }),
         (_("Advanced data"), {
-            "fields": [('height', 'width', 'quality'), 'login_required', 'show_title', "slug" ],
+            "fields": [('height', 'width', 'quality'), 'login_required', 'show_title', "slug"],
             "classes": ("collapse-closed",)
         }),
     )
@@ -99,7 +100,39 @@ class ImageBlockAdmin(admin.ModelAdmin):
                 return True
         return False
 
+
+class CarouselPanelInline(TabularDynamicInlineAdmin):
+    model = CarouselPanel
+
+
+class CarouselBlockAdmin(admin.ModelAdmin):
+    inlines = [CarouselPanelInline, ]
+    list_display = ('title', 'category', 'show_title', 'interval', 'login_required', 'panel_indicators', 'height', 'width', 'quality')
+    list_editable = ('login_required', 'category', 'interval', 'panel_indicators', 'show_title', 'height', 'width', 'quality')
+    search_fields = ('title', 'content', )
+
+    fieldsets = (
+        (None, {
+            "fields": ["title", "content", "category", ],
+        }),
+        ('Carousel Options', {
+            "fields": [('height', 'width', 'quality'), "interval", "panel_indicators", "show_title", "slug"],
+            "classes": ("collapse-open")
+        }),
+    )
+
+    def in_menu(self):
+        """
+        Hide from the admin menu unless explicitly set in ``ADMIN_MENU_ORDER``.
+        """
+        for (name, items) in settings.ADMIN_MENU_ORDER:
+            if "mezzanine_blocks.CarouselBlock" in items:
+                return True
+        return False
+
+
 admin.site.register(BlockCategory, BlockCategoryAdmin)
 admin.site.register(Block, BlockAdmin)
 admin.site.register(RichBlock, RichBlockAdmin)
 admin.site.register(ImageBlock, ImageBlockAdmin)
+admin.site.register(CarouselBlock, CarouselBlockAdmin)

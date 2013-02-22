@@ -5,12 +5,11 @@ from django.db import models
 from django.core.cache import cache
 from mezzanine.conf import settings
 from mezzanine.utils.urls import slugify
-from mezzanine_blocks.models import Block, RichBlock, ImageBlock
+from mezzanine_blocks.models import Block, RichBlock, ImageBlock, CarouselBlock
 
 
 register = template.Library()
 logger = logging.getLogger(__name__)
-
 
 
 class BasicFlatBlockWrapper(object):
@@ -67,12 +66,14 @@ class BasicFlatBlockWrapper(object):
                 template_name=self.tpl_name,
                 tpl_is_variable=self.tpl_is_variable)
 
+
 class RichFlatBlockWrapper(BasicFlatBlockWrapper):
     def __call__(self, parser, token):
         self.prepare(parser, token)
         return FlatBlockNode(self.slug, self.is_variable, self.cache_time,
                 template_name=self.tpl_name,
                 tpl_is_variable=self.tpl_is_variable, is_rich=True)
+
 
 class ImageFlatBlockWrapper(BasicFlatBlockWrapper):
     def __call__(self, parser, token):
@@ -81,17 +82,30 @@ class ImageFlatBlockWrapper(BasicFlatBlockWrapper):
                 template_name=self.tpl_name,
                 tpl_is_variable=self.tpl_is_variable, is_image=True)
 
+
+class CarouselFlatBlockWrapper(BasicFlatBlockWrapper):
+    def __call__(self, parser, token):
+        self.prepare(parser, token)
+        return FlatBlockNode(self.slug, self.is_variable, self.cache_time,
+                template_name=self.tpl_name,
+                tpl_is_variable=self.tpl_is_variable, is_carousel=True)
+
+
 do_get_flatblock = BasicFlatBlockWrapper()
 do_rich_flatblock = RichFlatBlockWrapper()
 do_image_flatblock = ImageFlatBlockWrapper()
+do_carousel_flatblock = CarouselFlatBlockWrapper()
+
 
 class FlatBlockNode(template.Node):
     def __init__(self, slug, is_variable, cache_time=0, with_template=True,
-            template_name=None, tpl_is_variable=False, is_rich=False, is_image=False):
+            template_name=None, tpl_is_variable=False, is_rich=False, is_image=False, is_carousel=False):
 
         if template_name is None:
             if is_image:
                 self.template_name = 'mezzanine_blocks/image_block.html'
+            elif is_carousel:
+                self.template_name = 'mezzanine_blocks/carousel_block.html'
             else:
                 self.template_name = 'mezzanine_blocks/block.html'
         else:
@@ -105,6 +119,7 @@ class FlatBlockNode(template.Node):
         self.with_template = with_template
         self.is_rich = is_rich
         self.is_image = is_image
+        self.is_carousel = is_carousel
 
     def render(self, context):
         if self.is_variable:
@@ -133,16 +148,16 @@ class FlatBlockNode(template.Node):
             if flatblock is None:
                 if self.is_rich:
                     _klass = RichBlock
-
                 elif self.is_image:
                     _klass = ImageBlock
-
+                elif self.is_carousel:
+                    _klass = CarouselBlock
                 else:
                     _klass = Block
 
                 flatblock, created = _klass.objects.get_or_create(
                                   slug=real_slug,
-                                  defaults = {'title': real_title}
+                                  defaults={'title': real_title}
                                )
 
                 if self.cache_time != 0:
@@ -159,13 +174,15 @@ class FlatBlockNode(template.Node):
 
             if self.with_template:
                 tmpl = loader.get_template(real_template)
-                new_ctx.update({'flatblock':flatblock})
+                new_ctx.update({'flatblock': flatblock})
                 return tmpl.render(new_ctx)
             else:
                 return flatblock.content
         except Block.DoesNotExist:
             return ''
 
+
 register.tag('flatblock', do_get_flatblock)
 register.tag('richflatblock', do_rich_flatblock)
 register.tag('imageflatblock', do_image_flatblock)
+register.tag('carouselflatblock', do_carousel_flatblock)
