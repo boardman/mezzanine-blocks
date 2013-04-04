@@ -71,7 +71,16 @@ class ImageBlock(BaseBlock, AdminThumbMixin):
         if thumb is None:
             return ""
 
-        return "%s%s" % (settings.MEDIA_URL, thumbnail(thumb, self.width, self.height, self.quality))
+        url = thumbnail(thumb.path, self.carousel_block.width,
+            self.carousel_block.height, self.carousel_block.quality)
+        # When using differing storage backends,
+        # such as Boto and S3 appears that file path
+        # can be stored as absolute rather than relative path
+        url_obj = urlparse(url)
+        if url_obj.scheme not in ['http', 'https']:
+            url = "%s%s" % (settings.MEDIA_URL, url)
+
+        return url
 
 
 class CarouselBlock(BaseBlock):
