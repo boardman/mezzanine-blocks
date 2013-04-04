@@ -47,7 +47,7 @@ class RichBlock(BaseBlock, RichText):
 class ImageBlock(BaseBlock, AdminThumbMixin):
     """An image Block
     """
-    image = FileField(verbose_name=_("Image"), upload_to="images", format="Image", max_length=255, null=True, blank=True)
+    image = FileBrowseField(verbose_name=_("Image"), format="Image", max_length=255, null=True, blank=True)
     description = RichTextField(_("Description"), blank=True, null=True)
     url = models.URLField(_("External URL"), max_length=255, blank=True, null=True, help_text=_("Optional URL."))
 
