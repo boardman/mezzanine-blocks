@@ -71,8 +71,8 @@ class ImageBlock(BaseBlock, AdminThumbMixin):
         if thumb is None:
             return ""
 
-        url = thumbnail(thumb.path, self.carousel_block.width,
-            self.carousel_block.height, self.carousel_block.quality)
+        url = thumbnail(thumb.path, self.image_block.width,
+            self.image_block.height, self.image_block.quality)
         # When using differing storage backends,
         # such as Boto and S3 appears that file path
         # can be stored as absolute rather than relative path
